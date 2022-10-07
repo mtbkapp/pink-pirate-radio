@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+  http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+<changeSet id="001-sounds" author="mtbkapp">
+  <preConditions onFail="MARK_RAN">
+    <not>
+      <tableExists tableName="sounds" />
+    </not>
+  </preConditions>
+  <sql>
+    create table entity (
+      id integer primary key autoincrement,
+      updated_at integer not null,
+      created_at integer not null,
+      kind text not null,
+      label text not null,
+      data text not null
+    )
+  </sql>
+</changeSet>
+
+</databaseChangeLog>
