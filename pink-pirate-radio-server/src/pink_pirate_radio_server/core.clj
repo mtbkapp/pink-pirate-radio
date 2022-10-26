@@ -11,28 +11,6 @@
            [liquibase.resource ClassLoaderResourceAccessor])
   (:gen-class))
 
-; routes
-;   put sound
-;   get sound
-;   list sounds 
-; 
-;   refs to music? youtube-dl? 
-;
-;   put drawing
-;   get drawing
-;   list drawings
-;
-;   put program
-;   get program
-;   list programs
-;   deploy program
-;
-; sound = base64 binary
-; drawing = base64 binary
-; program = json
-; 
-; generic handler constructors with spec for data type
-
 
 (defn db-middleware
   [handler db]
@@ -95,7 +73,9 @@
 
 
 (comment
-  (def s (-main))
+  (do
+    (component/stop s)
+    (def s (-main)))
   (keys s)
   (prn (:server s))
   (component/stop s)

@@ -1,10 +1,16 @@
 (ns pink-pirate-radio-server.handlers
-  (:require [clojure.walk :as walk] 
+  (:require [cheshire.core :as json]
+            [clojure.string :as string]
+            [clojure.walk :as walk] 
             [compojure.core :as compojure :refer [context defroutes POST GET PATCH DELETE]]
             [compojure.route :as route]
             [pink-pirate-radio-server.db :as db]
             [ring.util.response :as resp]
-            [pink-pirate-radio-server.deploy :as deploy]))
+            [pink-pirate-radio-server.deploy :as deploy])
+  (:import [java.util Base64 Arrays]))
+
+
+(def not-found (resp/not-found {:message "NOT FOUND!"}))
 
 
 (defn handle-get-all
@@ -16,7 +22,7 @@
   [{db :db {:keys [kind id]} :params}]
   (if-let [entity (db/get-one db kind id)]
     (resp/response entity)
-    (resp/not-found nil)))
+    not-found))
 
 
 (defn handle-post
@@ -29,29 +35,31 @@
   [{db :db body :body {:keys [kind id]} :params}]
   (if-let [new-row (db/patch db kind id (walk/keywordize-keys body))]
     (resp/response new-row)
-    (resp/not-found nil)))
+    not-found))
 
 
 (defn handle-delete
   [{db :db {:keys [kind id]} :params}]
   (if (db/delete db kind id)
     {:status 204}
-    (resp/not-found nil)))
+    not-found))
 
 
 (defn handle-deploy 
-  [{:keys [db params]}]
-  (resp/response (deploy/deploy-program (:id params))))
+  [{db :db {:keys [id]} :params}]
+  (if-let [{:keys [data]} (db/get-one db :programs id)]
+    (resp/response (deploy/deploy-program (json/parse-string data))) 
+    not-found))
 
 
 (defroutes app
   (GET "/" [] (resp/redirect "/index.html"))
+  (POST "/entities/programs/:id/deploy" request (handle-deploy request))
   (GET "/entities/:kind" r (handle-get-all r))
   (GET "/entities/:kind/:id" r (handle-get-one r))
   (POST "/entities/:kind" r (handle-post r))
   (PATCH "/entities/:kind/:id" r (handle-patch r))
   (DELETE "/entities/:kind/:id" r (handle-delete r))
-  (POST "/deploy-program/:id" request (handle-deploy request))
   (route/resources "/" {:root "public"})
   (route/not-found {:message "NOT FOUND"}))
 

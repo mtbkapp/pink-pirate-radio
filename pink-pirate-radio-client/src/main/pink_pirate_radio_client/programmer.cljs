@@ -1,6 +1,10 @@
 (ns pink-pirate-radio-client.programmer
-  (:require [reagent.core :as r]
-            ["blockly" :as Blockly])) 
+  (:require [clojure.core.async :as async]
+            [clojure.string :as string]
+            [reagent.core :as r]
+            ["blockly" :as Blockly]
+            [pink-pirate-radio-client.http :as http]
+            [pink-pirate-radio-client.utils :as utils])) 
 
 ; custom blocks
 ; play sound, async?
@@ -30,6 +34,19 @@
 ;   - user can upload new recorded clips (use browser apis to record)
 
 ; TODO set colors
+
+
+(def workspace (atom nil))
+(def options (atom {:sounds [] :drawings [] :songs []}))
+
+
+(defn get-options-as-js
+  [kind]
+  (clj->js (as-> (get @options kind) opts
+             (map (fn [{:strs [id label]}]
+                    [label (str id)]) 
+                  opts)
+             (conj opts ["None" "none"]))))
 
 
 (set! Blockly/Blocks.set_display_color
@@ -120,9 +137,7 @@
                                                :type "play_sound_clip"
                                                :args0 #js [#js {:type "field_dropdown"
                                                                 :name "clip"
-                                                                :options #js [#js ["bark" "BARK"]
-                                                                              #js ["growl" "GROWL"]
-                                                                              #js ["whine" "WHINE"]]}]
+                                                                :options (partial get-options-as-js :sounds)}]
                                                :previousStatement nil
                                                :nextStatement nil
                                                :colour 240
@@ -136,9 +151,7 @@
                      (.jsonInit ^object t #js {:message0 "song: %1"
                                                :args0 #js [#js {:type "field_dropdown"
                                                                 :name "clip"
-                                                                :options #js [#js ["Back Pocket" "Back Pocket"]
-                                                                              #js ["Lee" "Lee"]
-                                                                              #js ["Ballet" "Ballet"]]}]
+                                                                :options (partial get-options-as-js :songs)}]
                                                :output "String"
                                                :colour 160
                                                :tooltip "Returns the number of letters in the provided text."})))})
@@ -170,38 +183,94 @@
                        }))
 
 
-(defn on-workspace-change
-  [workspace]
-  ; debounce
-  ; serialize
-  ; send to server
-  (js/console.log (Blockly/serialization.workspaces.save workspace))
-  )
+(def patch-program-chan
+  (let [chan (async/chan (async/sliding-buffer 2))]
+    (async/go
+      (while true
+        (let [[program-id patch] (async/<! chan)]
+          (async/<! (http/patch-program program-id patch)))))
+    chan))
 
 
-(def workspace (atom nil))
+(defn confirm-delete 
+  [program-id e]
+  (when (js/confirm "Are you sure you want to throw this program away? It will be gone forever.")
+    (async/go 
+      (async/<! (http/delete-program program-id))
+      (utils/go-home!))))
 
 
-(defn ui
-  []
+(defn program-label-editor
+  [program-id label]
+  (let [curr-label (r/atom label)]
+    (fn []
+      [:div 
+       [:label {:for "program-label-input"}]
+       [:input {:id "program-label-input" 
+                :type "text"
+                :value @curr-label
+                :on-change (fn [e]
+                             (let [new-label (.-value (.-target e))]
+                               (reset! curr-label new-label)
+                               (async/go
+                                 (async/>! patch-program-chan 
+                                           [program-id {:label new-label}]))))}]])))
+
+
+(defn build-options
+  [api-sounds]
+  (map (fn [{:strs [id label]}] [id label]) api-sounds))
+
+
+(defn blockly-editor 
+  [{:keys [program sounds drawings]}]
+  (prn sounds)
   (r/create-class 
     {:component-did-mount 
      (fn [this]
-       ;TODO load program here from server
-       ;TODO load songs, sounds clips, and drawings
-       ;once that is all done then inject Blockly 
-       ; do it like this because the blocks need to have the data embedded into them
+       (swap! options assoc :sounds sounds :drawings drawings)
        (let [refs (.-refs this)
              new-workspace (inject-blockly (.-container ^object refs))]
+         (Blockly/serialization.workspaces.load (js/JSON.parse (get program "data"))
+                                                new-workspace)
          (.addChangeListener ^object new-workspace 
-                             (fn [_] (on-workspace-change new-workspace)))
+                             (fn []
+                               (async/go
+                                 (async/>! patch-program-chan 
+                                           [(get program "id")
+                                            {:data (Blockly/serialization.workspaces.save new-workspace)}]))))
          (reset! workspace new-workspace)))
      :render
      (fn [this]
-       [:div
-        [:div {:id "programmer-toolbar"}
-         [:button {:type "button"} "Close"]
-         [:button {:type "button" :on-click #(.undo ^object @workspace false)} "Undo"]
-         [:button {:type "button" :on-click #(.undo ^object @workspace true)} "Redo"]
-         [:button {:type "button"} "Deploy!"]]
-        [:div {:ref "container" :id "blockly" :style {:width 800 :height 600}}]])}))
+       (let [{:keys [program]} (r/props this)
+             {:strs [id label]} program]
+         [:div
+          [program-label-editor id label]
+          [:div {:id "programmer-toolbar"}
+           [:button {:type "button" :on-click #(utils/go-home!)} "Done"]
+           [:button {:type "button" :on-click (partial confirm-delete id)} "Delete"]
+           [:button {:type "button" :on-click #(.undo ^object @workspace false)} "Undo"]
+           [:button {:type "button" :on-click #(.undo ^object @workspace true)} "Redo"]
+           [:button {:type "button" :on-click #(http/deploy-program id)} "Deploy!"]] ; TODO validate program in some way first?
+          [:div {:ref "container" :id "blockly" :style {:width 800 :height 600}}]]))}))
+
+
+(defn editor*
+  [state]
+  (let [error-ks (http/get-errored-urls state)]
+    (cond (http/any-loading? state)
+          [:div "Loading..."]
+          (not (empty? error-ks))
+          [:div "Error loading: " (string/join "," (map name error-ks))]
+          :else 
+          [blockly-editor (http/just-data state)])))
+
+
+(defn editor
+  [program-id]
+  (http/fetch-wrapper
+    {:program (http/entity-url :programs program-id)
+     :sounds (http/entity-url :sounds)
+     :drawings (http/entity-url :drawings)
+     :songs (http/entity-url :songs)}
+    editor*))

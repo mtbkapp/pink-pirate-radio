@@ -26,7 +26,10 @@
                  [ring/ring-json "0.5.1"]
 
                  ; http routing
-                 [compojure "1.7.0"]]
+                 [compojure "1.7.0"]
+                 
+                 ; json encoding/decoding
+                 [cheshire "5.10.0"]]
   :main ^:skip-aot pink-pirate-radio-server.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all

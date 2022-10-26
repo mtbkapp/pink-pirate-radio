@@ -2,6 +2,7 @@
 
 
 (defn deploy-program
-  [id]
-  (throw (UnsupportedOperationException.)))
+  [program]
+  (clojure.pprint/pprint program)
+  {})
 
