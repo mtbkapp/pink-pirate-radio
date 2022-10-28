@@ -1,3 +1,8 @@
-#TODO run in try catch where the caught error is logged and the display shows
-# a skull and bones or frowny face
-on_program_start()
+
+for pin in BUTTONS:
+    GPIO.add_event_detect(pin, GPIO.FALLING, handle_button, bouncetime=100)
+
+run_user_event_handler('on_program_start')
+
+while True:
+    time.sleep(1)

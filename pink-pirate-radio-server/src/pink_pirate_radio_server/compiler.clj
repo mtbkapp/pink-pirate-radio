@@ -470,7 +470,6 @@
   (when (keyword? handler-name)
     (.append sb (name handler-name)))
   (when (vector? handler-name)
-    (.append sb "def ")
     (.append sb (string/join "_" (map name handler-name))))
   (.append sb "():")
   (.append sb \newline))
@@ -485,11 +484,13 @@
 (defn emit-handler
   [^StringBuilder sb [handler-name blocks]]
   (emit-handler-fn-dec sb handler-name)
-  (if (empty? blocks)
-    (do (.append sb tab)
-        (.append sb noop))
+  (if (every? empty? blocks)
+    (do (emit-tabs 1 sb) 
+        (.append sb noop)
+        (.append sb \newline))
     (doseq [b blocks]
-      (emit-block 1 sb b))))
+      (emit-block 1 sb b)))
+  (.append sb \newline))
 
 
 (defn emit-py 
@@ -504,13 +505,7 @@
 
 (defn prepend-preamble
   [py]
-  (str (slurp (io/resource "preamble.py"))
-       \newline
-       "#################################\n"
-       "#           USER CODE           #\n"
-       "#################################\n"
-       \newline
-       py))
+  (str (slurp (io/resource "preamble.py")) py))
 
 
 (defn append-kick

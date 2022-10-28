@@ -1,6 +1,25 @@
 import time
 import math
 import random
+from PIL import Image, ImageDraw, ImageFont #, ImageTk
+import ST7789
+import RPi.GPIO as GPIO
+
+BUTTONS = [5, 6, 16, 24]
+BUTTON_LABELS = ['a', 'b', 'x', 'y']
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+DISP_WIDTH = 240
+DISP_HEIGHT = 240
+
+display = ST7789.ST7789(
+    port=0,
+    cs=ST7789.BG_SPI_CS_FRONT,  # BG_SPI_CS_BACK or BG_SPI_CS_FRONT
+    dc=9,
+    backlight=13,               # 18 for back BG slot, 19 for front BG slot.
+    spi_speed_hz=80 * 1000 * 1000
+)
 
 variables = {}
 
@@ -175,9 +194,28 @@ def play_sound_clip(clip_id):
     print("play sound {0}".format(clip_id))
 
 def set_display_color(color):
+    img = Image.new('RGB', (DISP_WIDTH, DISP_HEIGHT), color=color)
+    display.display(img)
     r,g,b = color
     print("set display to ({0},{1},{2})".format(r,g,b))
 
 def media_player_action(action):
     print("do medial player action {0}".format(action))
 
+def display_error():
+    1==1
+
+def run_user_event_handler(handler_name):
+    if handler_name in globals():
+        try:
+            globals()[handler_name]()
+        except Exception as e:
+            display_error()
+            raise
+
+def handle_button(pin):
+    label = BUTTON_LABELS[BUTTONS.index(pin)]
+    handler_name = "on_button_push_" + label
+    if handler_name in globals():
+        # TODO run in try catch
+        globals()[handler_name]()
