@@ -13,6 +13,8 @@ GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 DISP_WIDTH = 240
 DISP_HEIGHT = 240
 
+TOMBSTONE_IMG = Image.open('resources/tombstone.png')
+
 display = ST7789.ST7789(
     port=0,
     cs=ST7789.BG_SPI_CS_FRONT,  # BG_SPI_CS_BACK or BG_SPI_CS_FRONT
@@ -203,7 +205,7 @@ def media_player_action(action):
     print("do medial player action {0}".format(action))
 
 def display_error():
-    1==1
+    display.display(TOMBSTONE_IMG)
 
 def run_user_event_handler(handler_name):
     if handler_name in globals():
@@ -215,7 +217,6 @@ def run_user_event_handler(handler_name):
 
 def handle_button(pin):
     label = BUTTON_LABELS[BUTTONS.index(pin)]
-    handler_name = "on_button_push_" + label
-    if handler_name in globals():
-        # TODO run in try catch
-        globals()[handler_name]()
+    run_user_event_handler("on_button_push_" + label)
+
+
