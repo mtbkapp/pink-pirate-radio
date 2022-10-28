@@ -51,8 +51,14 @@
 
 (defn deploy-program
   [program-id]
-  (-> (js/fetch (entity-url :programs program-id :deploy)
-                #js {:method "POST"})))
+  (js/fetch (entity-url :programs program-id :deploy)
+            #js {:method "POST"}))
+
+
+(defn stop-program
+  []
+  (js/fetch (entity-url :programs "stop")
+            #js {:method "POST"}))
 
 
 (defn delete-program

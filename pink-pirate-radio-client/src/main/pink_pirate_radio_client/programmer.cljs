@@ -251,7 +251,8 @@
            [:button {:type "button" :on-click (partial confirm-delete id)} "Delete"]
            [:button {:type "button" :on-click #(.undo ^object @workspace false)} "Undo"]
            [:button {:type "button" :on-click #(.undo ^object @workspace true)} "Redo"]
-           [:button {:type "button" :on-click #(http/deploy-program id)} "Deploy!"]] ; TODO validate program in some way first?
+           [:button {:type "button" :on-click #(http/deploy-program id)} "Run"] ; TODO validate program in some way first? 
+           [:button {:type "button" :on-click #(http/stop-program)} "Stop!"]] 
           [:div {:ref "container" :id "blockly" :style {:width 800 :height 600}}]]))}))
 
 

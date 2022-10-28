@@ -52,8 +52,15 @@
     not-found))
 
 
+(defn handle-stop-program
+  [req]
+  (deploy/stop-program)
+  (resp/response {}))
+
+
 (defroutes app
   (GET "/" [] (resp/redirect "/index.html"))
+  (POST "/entities/programs/stop" request (handle-stop-program request))
   (POST "/entities/programs/:id/deploy" request (handle-deploy request))
   (GET "/entities/:kind" r (handle-get-all r))
   (GET "/entities/:kind/:id" r (handle-get-one r))

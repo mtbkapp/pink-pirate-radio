@@ -13,3 +13,5 @@ pom.xml.asc
 .hg/
 *.swp
 data.sqlite3
+py_run*
+__pycache__/
