@@ -20,7 +20,7 @@
 
 
 (defrecord HttpServer
-  [host port server db]
+  [host port ssl-port server db]
   component/Lifecycle 
   (start [this]
     (assoc this :server (jetty/run-jetty 
@@ -30,6 +30,9 @@
                               (ring-json/wrap-json-body))
                           {:host host 
                            :port port 
+                           :ssl-port ssl-port 
+                           :keystore "keystore.jks"
+                           :key-password "password"
                            :join? false})))
   (stop [this]
     (.stop server)
@@ -60,16 +63,16 @@
 
 
 (defn system
-  [host port db-file]
+  [host port ssl-port db-file]
   (component/system-map :db (map->SqliteDb {:jdbcUrl (str "jdbc:sqlite:" db-file)})
                         :server (component/using
-                                  (map->HttpServer {:host host :port port})
+                                  (map->HttpServer {:host host :port port :ssl-port ssl-port})
                                   {:db :db})))
 
 
 (defn -main
   [& args]
-  (component/start (system "0.0.0.0" 9876 "data.sqlite3")))
+  (component/start (system "0.0.0.0" 9875 9876 "data.sqlite3")))
 
 
 (comment
