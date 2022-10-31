@@ -48,7 +48,7 @@
 (defn handle-deploy 
   [{db :db {:keys [id]} :params}]
   (if-let [{:keys [data]} (db/get-one db :programs id)]
-    (resp/response (deploy/deploy-program (json/parse-string data))) 
+    (resp/response (deploy/deploy-program db (json/parse-string data))) 
     not-found))
 
 
