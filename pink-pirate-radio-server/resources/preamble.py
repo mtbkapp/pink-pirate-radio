@@ -4,6 +4,7 @@ import random
 from PIL import Image, ImageDraw, ImageFont #, ImageTk
 import ST7789
 import RPi.GPIO as GPIO
+import vlc
 
 BUTTONS = [5, 6, 16, 24]
 BUTTON_LABELS = ['a', 'b', 'x', 'y']
@@ -193,7 +194,20 @@ def wait(s):
     time.sleep(s)
 
 def play_sound_clip(clip_id):
-    print("play sound {0}".format(clip_id))
+    f = 'clips/{0}'.format(clip_id)
+    player = vlc.MediaPlayer(f)
+    player.play()
+
+    # wait to start playing
+    while (player.is_playing() == 0):
+        time.sleep(0.1)
+
+    # wait to end playing
+    while (player.is_playing() == 1):
+        time.sleep(0.1)
+
+    player.stop()
+    player.release()
 
 def set_display_color(color):
     img = Image.new('RGB', (DISP_WIDTH, DISP_HEIGHT), color=color)
