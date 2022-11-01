@@ -14,7 +14,7 @@ GPIO.setup(BUTTONS, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 DISP_WIDTH = 240
 DISP_HEIGHT = 240
 
-TOMBSTONE_IMG = Image.open('resources/tombstone.png')
+TOMBSTONE_IMG = Image.open('../../resources/tombstone.png')
 
 display = ST7789.ST7789(
     port=0,
@@ -196,6 +196,7 @@ def wait(s):
 def play_sound_clip(clip_id):
     f = 'sound_clips/{0}'.format(clip_id)
     player = vlc.MediaPlayer(f)
+    player.audio_set_volume(50)
     player.play()
 
     # wait to start playing
