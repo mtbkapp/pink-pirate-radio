@@ -172,19 +172,19 @@
                                                :tooltip "wait"})))})
 
 
-(set! Blockly/Blocks.display_text
+(set! Blockly/Blocks.display_emoji
       #js {:init (fn []
                    (this-as
                      t
-                     (.jsonInit ^object t #js {:message0 "Display text of %1"
-                                               :type "display_text"
+                     (.jsonInit ^object t #js {:message0 "Display Emoji %1"
+                                               :type "display_emoji"
                                                :args0 #js [#js {:type "field_input"
                                                                 :name "VALUE"
                                                                 :check "String"}]
                                                :previousStatement nil
                                                :nextStatement nil
                                                :colour 240
-                                               :tooltip "display_text"})))})
+                                               :tooltip "display_emoji"})))})
 
 
 (defn inject-blockly

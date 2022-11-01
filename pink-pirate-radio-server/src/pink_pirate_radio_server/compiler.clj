@@ -214,9 +214,9 @@
   [:set_display_color (compile-input-expr block "VALUE")])
 
 
-(defmethod compile-stmt "display_text"
+(defmethod compile-stmt "display_emoji"
   [block]
-  [:display_text (get-field block "VALUE")])
+  [:display_emoji (get-field block "VALUE")])
 
 
 (defmethod compile-stmt "variables_set"

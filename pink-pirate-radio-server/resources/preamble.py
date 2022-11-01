@@ -222,7 +222,7 @@ def set_display_color(color):
 def media_player_action(action):
     print("do medial player action {0}".format(action))
 
-def display_text(text):
+def display_emoji(text):
     img = Image.new('RGBA', (DISP_WIDTH, DISP_HEIGHT), WHITE)
     draw = ImageDraw.Draw(img)
     font = ImageFont.truetype('../../resources/NotoColorEmoji.ttf', size=109, layout_engine=ImageFont.LAYOUT_RAQM)
