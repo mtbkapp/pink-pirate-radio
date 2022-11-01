@@ -194,7 +194,7 @@ def wait(s):
     time.sleep(s)
 
 def play_sound_clip(clip_id):
-    f = 'clips/{0}'.format(clip_id)
+    f = 'sound_clips/{0}'.format(clip_id)
     player = vlc.MediaPlayer(f)
     player.play()
 

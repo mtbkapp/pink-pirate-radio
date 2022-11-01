@@ -24,15 +24,15 @@
 
 
 (defn deploy-py
-  [py-code]
+  [py-code dir]
   (locking lock 
     (stop-program)
-    (let [t (LocalDateTime/now)
-          program-file (io/file (str "py_run_program_" t ".py"))
+    (let [program-file (io/file dir "program.py")
           _ (spit program-file py-code)
-          out-file (io/file (str "py_run_output_" t ".log"))
+          out-file (io/file dir "out.log" )
           ^List cmd ["python3" "-u" (.getCanonicalPath program-file)]
           process (-> (ProcessBuilder. cmd)
+                      (.directory dir)
                       (.redirectErrorStream true)
                       (.redirectOutput out-file)
                       (.start))]
@@ -40,25 +40,31 @@
 
 
 (defn write-sound-clips
-  [db]
-  (doseq [{:keys [id data]} (jdbc/execute! db 
-                                           ["select id, data from entity where kind = 'sounds'"]
-                                           {:builder-fn rs/as-unqualified-lower-maps})]
-    (io/copy (.decode (Base64/getDecoder) 
-                      ^String (second (string/split data #",")))
-             (io/file "clips" (str id)))))
+  [dir db]
+  (let [sound-dir (io/file dir "sound_clips")]
+    (.mkdirs sound-dir)
+    (doseq [{:keys [id data]} (jdbc/execute! db 
+                                             ["select id, data from entity where kind = 'sounds'"]
+                                             {:builder-fn rs/as-unqualified-lower-maps})]
+      (io/copy (.decode (Base64/getDecoder) 
+                        ^String (second (string/split data #",")))
+               (io/file sound-dir (str id))))))
 
 
 (defn deploy-program
   [db program]
   ; TODO logging
-  ; TODO create a folder for everything to run in
-  ; TODO clean up folder before running a new program
-  (write-sound-clips db)
-  #_(-> program
-      compiler/compile-program
-      compiler/emit-py
-      compiler/prepend-preamble
-      compiler/append-kick
-      deploy-py)
-  {})
+  ; TODO clean up old folder(s) before running a new program
+  (let [t (LocalDateTime/now)
+        dir (doto (io/file "py_work_dirs" (str "py_" t))
+              (.mkdirs))] 
+
+
+    (write-sound-clips dir db)
+    (-> program
+        compiler/compile-program
+        compiler/emit-py
+        compiler/prepend-preamble
+        compiler/append-kick
+        (deploy-py dir))
+    {:dir (.getCanonicalPath dir)}))
