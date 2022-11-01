@@ -58,8 +58,6 @@
   (let [t (LocalDateTime/now)
         dir (doto (io/file "py_work_dirs" (str "py_" t))
               (.mkdirs))] 
-
-
     (write-sound-clips dir db)
     (-> program
         compiler/compile-program
