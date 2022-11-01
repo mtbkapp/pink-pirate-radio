@@ -1,7 +1,7 @@
 import time
 import math
 import random
-from PIL import Image, ImageDraw, ImageFont #, ImageTk
+from PIL import Image, ImageDraw, ImageFont
 import ST7789
 import RPi.GPIO as GPIO
 import vlc
@@ -15,6 +15,9 @@ DISP_WIDTH = 240
 DISP_HEIGHT = 240
 
 TOMBSTONE_IMG = Image.open('../../resources/tombstone.png')
+FONT = ImageFont.truetype('../../resources/DejaVuSansMono.ttf', 50)
+BLACK = (0,0,0)
+WHITE = (255,255,255)
 
 display = ST7789.ST7789(
     port=0,
@@ -218,6 +221,13 @@ def set_display_color(color):
 
 def media_player_action(action):
     print("do medial player action {0}".format(action))
+
+def display_text(text):
+    img = Image.new('RGBA', (DISP_WIDTH, DISP_HEIGHT), WHITE)
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype('../../resources/NotoColorEmoji.ttf', size=109, layout_engine=ImageFont.LAYOUT_RAQM)
+    draw.text((50,50), text[0:1], font=font, embedded_color=True)
+    display.display(img)
 
 def display_error():
     display.display(TOMBSTONE_IMG)

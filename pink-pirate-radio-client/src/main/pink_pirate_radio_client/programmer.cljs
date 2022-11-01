@@ -172,6 +172,21 @@
                                                :tooltip "wait"})))})
 
 
+(set! Blockly/Blocks.display_text
+      #js {:init (fn []
+                   (this-as
+                     t
+                     (.jsonInit ^object t #js {:message0 "Display text of %1"
+                                               :type "display_text"
+                                               :args0 #js [#js {:type "field_input"
+                                                                :name "VALUE"
+                                                                :check "String"}]
+                                               :previousStatement nil
+                                               :nextStatement nil
+                                               :colour 240
+                                               :tooltip "display_text"})))})
+
+
 (defn inject-blockly
   [container]
   (Blockly/inject container 

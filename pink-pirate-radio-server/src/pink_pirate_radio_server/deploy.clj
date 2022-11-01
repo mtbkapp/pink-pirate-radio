@@ -50,6 +50,10 @@
                         ^String (second (string/split data #",")))
                (io/file sound-dir (str id))))))
 
+(defn tap
+  [x]
+  (clojure.pprint/pprint x)
+  x)
 
 (defn deploy-program
   [db program]
@@ -60,7 +64,9 @@
               (.mkdirs))] 
     (write-sound-clips dir db)
     (-> program
+        tap
         compiler/compile-program
+        tap
         compiler/emit-py
         compiler/prepend-preamble
         compiler/append-kick

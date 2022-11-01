@@ -214,6 +214,11 @@
   [:set_display_color (compile-input-expr block "VALUE")])
 
 
+(defmethod compile-stmt "display_text"
+  [block]
+  [:display_text (get-field block "VALUE")])
+
+
 (defmethod compile-stmt "variables_set"
   [block]
   [:set_var 

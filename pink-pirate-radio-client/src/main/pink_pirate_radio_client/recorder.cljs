@@ -1,6 +1,7 @@
 (ns pink-pirate-radio-client.recorder 
   (:require [clojure.core.async :as async]
             [pink-pirate-radio-client.http :as http] 
+            [pink-pirate-radio-client.utils :as utils]
             [reagent.core :as r]))
 
 
@@ -44,7 +45,7 @@
   (let [state (r/atom {:status :unloaded})]
     (fn []
       (let [{:keys [status data]} @state]
-        [:li label
+        [:li (str label " - ")
          (cond (= status :unloaded) 
                [:button {:type "button" :on-click (partial on-click-list-play id state)} "Play"]
                (= status :loading)
@@ -63,16 +64,18 @@
   (reload-sound-list)
   (fn []
     (let [{:keys [status data]} @sounds-list-state]
-      (case status
-        :loading [:div "Loading sounds..."]
-        :success (into [:ul]
-                       (map (fn [sound]
-                              [audio-control sound]))
-                       (sort-by #(get % "updated_at") data)) 
-        :error [:div "Error loading sounds!"]))))
+      [:div
+       [:h3 "Recordings"]
+       (case status
+         :loading [:div "Loading sounds..."]
+         :success (into [:ul]
+                        (map (fn [sound]
+                               [audio-control sound]))
+                        (sort-by #(get % "updated_at") data)) 
+         :error [:div "Error loading sounds!"])])))
 
 
-(def init-record-state {:label "New Sound"
+(def init-record-state {:label "New"
                         :status :new
                         :error-msg ""
                         :stream nil 
@@ -207,7 +210,8 @@
 (defn recorder 
   []
   (let [{:keys [label status error-msg url] :as rs} @record-state]
-    [:div
+    [:div 
+     [:h3 "New Recording"]
      [:input {:type "text"
               :disabled (not (contains? #{:new :done-recording} status))
               :value label
@@ -231,6 +235,7 @@
 (defn editor
   []
   [:div
-   [:h1 "Sounds!"]
+   [:h1 "Sounds Clips"]
+   [:button {:type "button" :on-click utils/go-home!} "Back"]
    [recorder]
    [sounds-list]])
