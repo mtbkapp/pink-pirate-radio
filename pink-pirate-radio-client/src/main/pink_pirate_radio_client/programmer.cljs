@@ -150,7 +150,7 @@
                      t
                      (.jsonInit ^object t #js {:message0 "song: %1"
                                                :args0 #js [#js {:type "field_dropdown"
-                                                                :name "clip"
+                                                                :name "song"
                                                                 :options (partial get-options-as-js :songs)}]
                                                :output "String"
                                                :colour 160
@@ -238,12 +238,15 @@
 
 
 (defn blockly-editor 
-  [{:keys [program sounds drawings]}]
-  (prn sounds)
+  [{:keys [program sounds drawings songs]}]
   (r/create-class 
     {:component-did-mount 
      (fn [this]
-       (swap! options assoc :sounds sounds :drawings drawings)
+       (swap! options 
+              assoc 
+              :sounds sounds 
+              :drawings drawings
+              :songs songs)
        (let [refs (.-refs this)
              new-workspace (inject-blockly (.-container ^object refs))]
          (Blockly/serialization.workspaces.load (js/JSON.parse (get program "data"))

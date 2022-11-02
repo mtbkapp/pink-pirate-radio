@@ -205,6 +205,20 @@
    (compile-input-expr block "RATIO")])
 
 
+(defmethod compile-expr "song"
+  [block]
+  [:song (get-field block "song")])
+
+
+(defmethod compile-expr "lists_create_with"
+  [block]
+  (let [{len "itemCount"} (get block "extraState")]
+    (into [:make_list]
+          (map (fn [n]
+                 (compile-input-expr block (str "ADD" n))))
+          (range len))))
+
+
 (def compile-stmt nil)
 (defmulti compile-stmt (fn [{t "type"}] t))
 
@@ -229,6 +243,11 @@
 (defmethod compile-stmt "play_sound_clip"
   [block]
   [:play_sound_clip (get-field block "clip")])
+
+
+(defmethod compile-stmt "media_set_playlist"
+  [block]
+  [:media_player_set_playlist (compile-input-expr block "VALUE")])
 
 
 (defmethod compile-stmt "controls_repeat_ext"

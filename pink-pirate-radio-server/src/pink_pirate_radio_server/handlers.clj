@@ -60,12 +60,12 @@
 
 (defn handle-get-songs
   [req]
-  (resp/response (db/get-songs)))
+  (resp/response (sort-by :label (db/get-songs))))
 
 
 (defroutes app
   (GET "/" [] (resp/redirect "/index.html"))
-  (GET "/entities/songs" request (handle-get-music request))
+  (GET "/entities/songs" request (handle-get-songs request))
   (POST "/entities/programs/stop" request (handle-stop-program request))
   (POST "/entities/programs/:id/deploy" request (handle-deploy request))
   (GET "/entities/:kind" r (handle-get-all r))

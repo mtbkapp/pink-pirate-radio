@@ -60,13 +60,13 @@
                        "music"
                        "pink-pirate-radio"))
 
+
 (defn get-songs
   []
   (into []
         (comp (filter #(.isFile ^File %))
               (map (fn [^File f]
-                     {:id (.getName f)
-                      :label (-> (.getName f)
-                                 (string/split #"\.")
-                                 (first))})))
+                     (let [id (.getName f)]
+                       {:id id 
+                        :label (string/replace id #"\.[a-zA-Z0-9]+$" "") }))))
         (file-seq song-dir)))
