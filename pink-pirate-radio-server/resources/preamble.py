@@ -27,6 +27,32 @@ display = ST7789.ST7789(
     spi_speed_hz=80 * 1000 * 1000
 )
 
+media_player = vlc.MediaPlayer()
+
+def media_player_wait_end():
+    # wait to start playing
+    while (media_player.is_playing() == 0):
+        time.sleep(0.1)
+
+    # wait to end playing
+    while (media_player.is_playing() == 1):
+        time.sleep(0.1)
+
+def media_player_play_file(path):
+    media_player.stop()
+    media_player.release()
+    media_player = vlc.MediaPlayer(path)
+    vlc.play()
+
+def media_player_action(action):
+    print("do medial player action {0}".format(action))
+    if action == 'play':
+        media_player.play()
+    elif aciton == 'pause':
+        media_player.do_pause(1)
+    else:
+        print("unsupported media player action {0}".format(action))
+
 variables = {}
 
 def set_var(k,v):
@@ -197,30 +223,14 @@ def wait(s):
     time.sleep(s)
 
 def play_sound_clip(clip_id):
-    f = 'sound_clips/{0}'.format(clip_id)
-    player = vlc.MediaPlayer(f)
-    player.audio_set_volume(50)
-    player.play()
-
-    # wait to start playing
-    while (player.is_playing() == 0):
-        time.sleep(0.1)
-
-    # wait to end playing
-    while (player.is_playing() == 1):
-        time.sleep(0.1)
-
-    player.stop()
-    player.release()
+    media_player_play_file('sound_clips/{0}'.format(clip_id))
+    media_player_wait_end()
 
 def set_display_color(color):
     img = Image.new('RGB', (DISP_WIDTH, DISP_HEIGHT), color=color)
     display.display(img)
     r,g,b = color
     print("set display to ({0},{1},{2})".format(r,g,b))
-
-def media_player_action(action):
-    print("do medial player action {0}".format(action))
 
 def display_emoji(text):
     img = Image.new('RGBA', (DISP_WIDTH, DISP_HEIGHT), WHITE)

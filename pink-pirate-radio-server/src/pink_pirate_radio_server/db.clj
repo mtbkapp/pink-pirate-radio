@@ -1,53 +1,11 @@
 (ns pink-pirate-radio-server.db
-  (:require [next.jdbc :as jdbc]
+  (:require [clojure.java.io :as io]
+            [clojure.string :as string]
+            [next.jdbc :as jdbc]
             [next.jdbc.sql :as sql]
-            [next.jdbc.result-set :as rs]))
+            [next.jdbc.result-set :as rs])
+  (:import [java.io File]))
 
-; 
-; (defn get-all
-;   [db table]
-;   (jdbc/execute! db
-;                  [(str "select * from " (name table))]
-;                  {:builder-fn rs/as-unqualified-lower-maps}))
-; 
-; 
-; (defn get-one
-;   [db table id]
-;   (jdbc/execute-one! db 
-;                      [(str "select * from " (name table) " where id = ?") id]
-;                      {:builder-fn rs/as-unqualified-lower-maps}))
-; 
-; 
-; (defn create
-;   [db table data]
-;   (let [id (-> (sql/insert! db
-;                             table
-;                             (-> data
-;                                 (dissoc :id)
-;                                 (assoc :updated_at (System/currentTimeMillis)
-;                                        :created_at (System/currentTimeMillis))))
-; 
-;                (get (keyword "last_insert_rowid()")))]
-;     (get-one db table id)))
-; 
-; 
-; (defn patch
-;   [db table id data]
-;   (sql/update! db 
-;                table 
-;                (-> data 
-;                    (dissoc :id :created_at)
-;                    (assoc :updated_at (System/currentTimeMillis)))
-;                {:id id})
-;   (get-one db table id))
-; 
-; 
-; (defn delete 
-;   [db table id]
-;   (-> (sql/delete! db table {:id id})
-;       ::jdbc/update-count
-;       (= 1)))
-; 
 
 (defn epoch-seconds
   []
@@ -96,3 +54,19 @@
   (-> (sql/delete! db "entity" {:id id :kind (name kind)})
       ::jdbc/update-count
       (= 1)))
+
+
+(def song-dir (io/file (System/getProperty "user.home")
+                       "music"
+                       "pink-pirate-radio"))
+
+(defn get-songs
+  []
+  (into []
+        (comp (filter #(.isFile ^File %))
+              (map (fn [^File f]
+                     {:id (.getName f)
+                      :label (-> (.getName f)
+                                 (string/split #"\.")
+                                 (first))})))
+        (file-seq song-dir)))
