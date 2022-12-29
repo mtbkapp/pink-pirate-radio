@@ -204,6 +204,9 @@ def ternary(x,y,z):
 def color(r,g,b):
     return (r,g,b)
 
+def make_list(*args):
+    return list(args)
+
 def rand_color():
     r = random.randint(0,255)
     g = random.randint(0,255)
